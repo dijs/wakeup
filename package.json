@@ -1,0 +1,20 @@
+{
+  "name": "wakeup",
+  "version": "1.0.0",
+  "description": "Wake Up Alarm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Richard van der Dys",
+  "license": "MIT",
+  "dependencies": {
+    "async": "^1.4.2",
+    "express": "^4.13.3",
+    "forecastio": "^0.2.0",
+    "ivona-node": "^0.2.0",
+    "lodash": "^3.10.1",
+    "node-schedule": "^0.2.9",
+    "sonos": "^0.8.0"
+  }
+}
