@@ -10,10 +10,12 @@
   "license": "MIT",
   "dependencies": {
     "async": "^1.4.2",
+    "bluebird": "^2.10.2",
     "express": "^4.13.3",
     "forecastio": "^0.2.0",
     "ivona-node": "^0.2.0",
     "lodash": "^3.10.1",
+    "node-hue-api": "^1.1.2",
     "node-schedule": "^0.2.9",
     "sonos": "^0.8.0"
   }

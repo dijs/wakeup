@@ -4,6 +4,7 @@ var async = require('async');
 var tts = require('./tts');
 var forecast = require('./forecast');
 var ip = require('./ip');
+var lights = require('./lights');
 var config = require('./config.json')
 
 var AUDIO_PATH = 'http://' + ip().address + ':' + config.port + '/audio/';
@@ -67,6 +68,9 @@ module.exports = function wakeUp(callback) {
             cb();
           }
         );
+      },
+      function (cb) {
+        lights(cb);
       },
       function (cb) {
         var playedAlarm = +new Date() - startedAlarm;
