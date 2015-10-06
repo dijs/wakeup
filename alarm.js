@@ -46,6 +46,10 @@ module.exports = function wakeUp(callback) {
     console.log('Found player at ' + player.host);
     async.waterfall([
       function (cb) {
+        console.log('Setting volume');
+        player.setVolume(config.volume, cb)
+      },
+      function (err, cb) {
         player.queueNext(AUDIO_PATH + config.song, cb);
       },
       function (err, cb) {

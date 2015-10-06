@@ -17,7 +17,10 @@ function state(api) {
 }
 
 function createSlowDimState() {
-  return lightState.create().on().brightness(75).transition(5000);
+  return lightState.create()
+    .on()
+    .brightness(config.lightLevel)
+    .transition(5000);
 }
 
 function dimAllLights(lights) {
