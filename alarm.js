@@ -1,12 +1,12 @@
 var sonos = require('sonos');
 var async = require('async');
-var duration = require('mp3-duration');
 
 var tts = require('./tts');
 var forecast = require('./forecast');
 var ip = require('./ip');
 var lights = require('./lights');
 var getSchedules = require('./schedules');
+var duration = require('./duration');
 var config = require('./config.json');
 
 var AUDIO_PATH = 'http://' + ip().address + ':' + config.port + '/audio/';
@@ -110,10 +110,11 @@ module.exports = function wakeUp(callback) {
         });
       },
       function (cb) {
-        duration(AUDIO_PATH + SUMMARY_FILE, cb);
+        duration(__dirname + '/audio/' + SUMMARY_FILE, cb);
       },
       function (seconds, cb) {
-        console.log('Should be saying summary');
+        seconds = Math.round(seconds) + 3;
+        console.log('Should be saying summary (' + seconds + ' sec)');
         setTimeout(cb, seconds * 1000);
       },
       function (cb) {
