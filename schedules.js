@@ -1,7 +1,7 @@
 var moment = require('moment')
 var async = require('async');
 var getCalendarApi = require('./calendar')
-var config = require('./config')
+var getConfig = require('./config.js');
 
 function normalize(event) {
   var date = event.start.dateTime || event.start.date;
@@ -36,6 +36,7 @@ function getTodaysEvents(calendar, auth, calendarId, callback) {
 }
 
 function getSchedules(callback) {
+  var config = getConfig();
   getCalendarApi(function (auth, calendar) {
     async.map(config.calendars, function (info, done) {
       getTodaysEvents(calendar, auth, info.id, function (err, events) {

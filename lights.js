@@ -1,14 +1,20 @@
 var hue = require('node-hue-api');
 var Promise = require('bluebird');
 
-var config = require('./config.json');
+var getConfig = require('./config.js');
 
 var HueApi = hue.HueApi;
 var lightState = hue.lightState;
 var api;
 
-var findLights = function (bridges) {
-  api = new HueApi(bridges[0].ipaddress, config.hueUser);
+var getApi = function (hueUser) {
+  return hue.nupnpSearch().then(function (bridges) {
+    api = new HueApi(bridges[0].ipaddress, hueUser);
+    return api;
+  });
+}
+
+var findLights = function (api) {
   return api.lights();
 };
 
@@ -16,24 +22,27 @@ function state(api) {
   return api.fullState();
 }
 
-function createSlowDimState() {
+function createSlowDimState(lightLevel) {
   return lightState.create()
     .on()
-    .brightness(config.lightLevel)
+    .brightness(lightLevel)
     .transition(5000);
 }
 
-function dimAllLights(lights) {
-  var state = createSlowDimState();
-  return Promise.all(lights.lights.map(function (light) {
-    return api.setLightState(light.id, state);
-  }));
+function dimAllLights(lightLevel) {
+  var state = createSlowDimState(lightLevel);
+  return function (lights) {
+    return Promise.all(lights.lights.map(function (light) {
+      return api.setLightState(light.id, state);
+    }));
+  };
 }
 
 function turnOnLights(callback) {
-  hue.nupnpSearch()
+  var config = getConfig();
+  getApi(config.hueUser)
     .then(findLights)
-    .then(dimAllLights)
+    .then(dimAllLights(config.lightLevel))
     .then(function () {
       callback && callback();
     })

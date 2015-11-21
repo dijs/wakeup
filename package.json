@@ -4,13 +4,15 @@
   "description": "Wake Up Alarm",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "watch": "nodemon .",
+    "start": "node index"
   },
   "author": "Richard van der Dys",
   "license": "MIT",
   "dependencies": {
     "async": "^1.4.2",
     "bluebird": "^2.10.2",
+    "body-parser": "^1.14.1",
     "express": "^4.13.3",
     "forecastio": "^0.2.0",
     "google-auth-library": "^0.9.6",
@@ -19,8 +21,12 @@
     "lodash": "^3.10.1",
     "moment": "^2.10.6",
     "musicmetadata": "^2.0.2",
+    "node-fs-extra": "^0.8.1",
     "node-hue-api": "^1.1.2",
     "node-schedule": "^0.2.9",
     "sonos": "^0.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
   }
 }

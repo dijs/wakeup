@@ -1,0 +1,32 @@
+{
+  "title": "Options",
+  "type": "object",
+  "properties": {
+    "cronPattern": {
+      "type": "string",
+      "default": "0 0 6 * * *"
+    },
+    "minAlarmTime": {
+      "type": "integer",
+      "default": 5000,
+      "minimum": 0,
+      "maximum": 60000
+    },
+    "lightLevel": {
+      "type": "integer",
+      "default": 30,
+      "minimum": 0,
+      "maximum": 100
+    },
+    "volume": {
+      "type": "integer",
+      "default": 50,
+      "minimum": 0,
+      "maximum": 100
+    },
+    "off": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
