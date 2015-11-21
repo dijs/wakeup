@@ -1,7 +1,7 @@
 var schedule = require('node-schedule');
 var wakeUp = require('./alarm');
 var server = require('./server');
-var config = require('./config.json')
+var config = require('./config.js')();
 
 server(config.port, function () {
   console.log('Started server @ http://localhost:' + config.port);

@@ -7,9 +7,8 @@ var ip = require('./ip');
 var lights = require('./lights');
 var getSchedules = require('./schedules');
 var duration = require('./duration');
-var config = require('./config.json');
+var getConfig = require('./config.js');
 
-var AUDIO_PATH = 'http://' + ip().address + ':' + config.port + '/audio/';
 var SUMMARY_FILE = 'todays_summary.mp3';
 
 function findSonos(callback) {
@@ -44,6 +43,11 @@ function playRadio(player, uri, metadata, callback) {
 
 // TODO: Make these promises for god sake
 module.exports = function wakeUp(callback) {
+  var config = getConfig();
+  if (config.off === true) {
+    return;
+  }
+  var AUDIO_PATH = 'http://' + ip().address + ':' + config.port + '/audio/';
   var startedAlarm;
   console.log('Searching for sonos');
   findSonos(function (err, player) {

@@ -1,9 +1,9 @@
 var ForecastIo = require('forecastio');
-var config = require('./config.json')
-
-var forecastIo = new ForecastIo(config.forecastIoApiKey);
+var getConfig = require('./config.js');
 
 function forecast(callback) {
+  var config = getConfig();
+  var forecastIo = new ForecastIo(config.forecastIoApiKey);
   forecastIo.forecast(config.forecastIoLat, config.forecastIoLon, function (err, data) {
     if (err) {
       return callback(err);

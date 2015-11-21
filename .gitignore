@@ -2,3 +2,5 @@ node_modules/
 audio/
 config.json
 client_secret.json
+options.json
+npm-debug.log
