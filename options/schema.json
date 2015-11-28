@@ -18,7 +18,19 @@
       "minimum": 0,
       "maximum": 100
     },
-    "volume": {
+    "songVolume": {
+      "type": "integer",
+      "default": 50,
+      "minimum": 0,
+      "maximum": 100
+    },
+    "summaryVolume": {
+      "type": "integer",
+      "default": 50,
+      "minimum": 0,
+      "maximum": 100
+    },
+    "radioVolume": {
       "type": "integer",
       "default": 50,
       "minimum": 0,

@@ -9,7 +9,14 @@ var getSchedules = require('./schedules');
 var duration = require('./duration');
 var getConfig = require('./config.js');
 
+var VERBOSE = true;
 var SUMMARY_FILE = 'todays_summary.mp3';
+
+function log(obj) {
+  if (VERBOSE) {
+    console.log(obj);
+  }
+}
 
 function findSonos(callback) {
   var called = false;
@@ -49,26 +56,26 @@ module.exports = function wakeUp(callback) {
   }
   var AUDIO_PATH = 'http://' + ip().address + ':' + config.port + '/audio/';
   var startedAlarm;
-  console.log('Searching for sonos');
+  log('Searching for sonos');
   findSonos(function (err, player) {
-    console.log('Found player at ' + player.host);
+    log('Found player at ' + player.host);
     async.waterfall([
       function (cb) {
-        console.log('Setting volume');
-        player.setVolume(config.volume, cb)
+        log('Setting song volume');
+        player.setVolume(config.songVolume, cb)
       },
       function (err, cb) {
         player.queueNext(AUDIO_PATH + config.song, cb);
       },
       function (err, cb) {
         startedAlarm = +new Date();
-        console.log('Started alarm at: ' + startedAlarm);
+        log('Started alarm at: ' + startedAlarm);
         player.play(function () {
           cb();
         });
       },
       function (cb) {
-        console.log('Fetching forecast');
+        log('Fetching forecast');
         forecast(cb);
       },
       function (weather, cb) {
@@ -86,7 +93,7 @@ module.exports = function wakeUp(callback) {
         var text = 'Good morning. Today\'s weather is ' + weather.summary +
           ', the low is ' + weather.low + ', and the high is ' + weather.high +
           '. For schedules today: ' + scheduleText;
-        console.log('Fetching TTS');
+        log('Fetching TTS');
         tts(
           text,
           SUMMARY_FILE,
@@ -101,11 +108,15 @@ module.exports = function wakeUp(callback) {
       function (cb) {
         var playedAlarm = +new Date() - startedAlarm;
         var alarmTimeLeft = Math.max(0, config.minAlarmTime - playedAlarm);
-        console.log('Alarm time left: ' + alarmTimeLeft);
+        log('Alarm time left: ' + alarmTimeLeft);
         setTimeout(cb, alarmTimeLeft);
       },
       function (cb) {
-        console.log('Playing today\'s summary');
+        log('Setting summary volume');
+        player.setVolume(config.summaryVolume, cb)
+      },
+      function (err, cb) {
+        log('Playing today\'s summary');
         player.queueNext(AUDIO_PATH + SUMMARY_FILE, cb);
       },
       function (playing, cb) {
@@ -118,11 +129,15 @@ module.exports = function wakeUp(callback) {
       },
       function (seconds, cb) {
         seconds = Math.round(seconds) + 3;
-        console.log('Should be saying summary (' + seconds + ' sec)');
+        log('Should be saying summary (' + seconds + ' sec)');
         setTimeout(cb, seconds * 1000);
       },
       function (cb) {
-        console.log('Start playing radio');
+        log('Setting radio volume');
+        player.setVolume(config.radioVolume, cb)
+      },
+      function (err, cb) {
+        log('Start playing radio');
         playRadio(player, config.radioUri, config.radioMetadata, cb)
       }
     ], callback);

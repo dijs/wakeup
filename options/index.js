@@ -29,7 +29,13 @@ function createEditor(schema) {
 function createOptionsSetter(editor) {
   return function (options) {
     if (typeof options === 'object') {
-      return editor.setValue(options);
+      // Upgrade options if needed
+      var props = editor.schema.properties;
+      var validOptions = {};
+      Object.keys(props).forEach(function (prop) {
+        validOptions[prop] = options[prop] || props[prop].default;
+      });
+      return editor.setValue(validOptions);
     }
   };
 }
