@@ -6,10 +6,7 @@ var urlencodedParser = bodyParser.urlencoded({
   extended: false
 });
 var wakeUp = require('./alarm');
-
-function updateOptions(options, callback) {
-  return fs.writeJson('./options.json', options, callback);
-}
+var OPTIONS_PATH = __dirname + '/options.json';
 
 module.exports = function (port, started, updated) {
 
@@ -19,7 +16,7 @@ module.exports = function (port, started, updated) {
   app.use('/audio', express.static(__dirname + '/audio'));
   app.use('/', express.static(__dirname + '/options'));
   app.get('/options', function (req, res, next) {
-    fs.readJson('./options.json', function (err, json) {
+    fs.readJson(OPTIONS_PATH, function (err, json) {
       if (err) {
         return next(err);
       }
@@ -28,14 +25,13 @@ module.exports = function (port, started, updated) {
   });
   app.post('/options', function (req, res, next) {
     var options = JSON.parse(req.body.json);
-    updateOptions(options, function (err) {
-      if (err) {
-        return next(err);
-      } else {
-        updated();
-        return res.sendStatus(200);
-      }
-    });
+    var oldOptions = fs.readJsonSync(OPTIONS_PATH);
+    var cronPatternChanged = options.cronPattern !== oldOptions.cronPattern;
+    fs.writeJsonSync(OPTIONS_PATH, options);
+    if (cronPatternChanged) {
+      updated();
+    }
+    return res.sendStatus(200);
   });
   app.post('/test', function (req, res) {
     wakeUp();
