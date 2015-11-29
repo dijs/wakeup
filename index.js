@@ -11,6 +11,7 @@ function started() {
 }
 
 function updated() {
+  log('Re-scheduling alarm job');
   currentJob.cancel();
   var config = getConfig();
   currentJob = schedule.scheduleJob(config.cronPattern, wakeUp);

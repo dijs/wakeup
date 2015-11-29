@@ -48,6 +48,21 @@ function playRadio(player, uri, metadata, callback) {
   });
 }
 
+function createSummary(weather, schedules) {
+  var scheduleText = schedules.filter(function (schedule) {
+      return schedule.events > 0;
+    })
+    .map(function (schedule) {
+      var eventsText = schedule.events.map(function (event) {
+        return event.summary + ' at ' + event.time;
+      }).join(' and ');
+      return schedule.name + ' has ' + eventsText;
+    }).join(' and ');
+  var weatherText = 'Good morning. Today\'s weather is ' + weather.summary +
+    ', the low is ' + weather.low + ', and the high is ' + weather.high + '.';
+  return weatherText + (scheduleText.length > 0 ? ' ' + scheduleText : '');
+}
+
 // TODO: Make these promises for god sake
 module.exports = function wakeUp(callback) {
   var config = getConfig();
@@ -79,23 +94,16 @@ module.exports = function wakeUp(callback) {
         forecast(cb);
       },
       function (weather, cb) {
+        log('Fetching schedules');
         getSchedules(function (err, schedules) {
           cb(err, weather, schedules)
         });
       },
       function (weather, schedules, cb) {
-        var scheduleText = schedules.map(function (schedule) {
-          var eventsText = schedule.events.map(function (event) {
-            return event.summary + ' at ' + event.time;
-          }).join(' and ');
-          return schedule.name + ' has ' + eventsText;
-        }).join(' and ');
-        var text = 'Good morning. Today\'s weather is ' + weather.summary +
-          ', the low is ' + weather.low + ', and the high is ' + weather.high +
-          '. For schedules today: ' + scheduleText;
+        var summaryText = createSummary(weather, schedules);
         log('Fetching TTS');
         tts(
-          text,
+          summaryText,
           SUMMARY_FILE,
           function () {
             cb();
