@@ -33,7 +33,11 @@ function createOptionsSetter(editor) {
       var props = editor.schema.properties;
       var validOptions = {};
       Object.keys(props).forEach(function (prop) {
-        validOptions[prop] = options[prop] || props[prop].default;
+        if (options[prop] === undefined) {
+          validOptions[prop] = props[prop].default;
+        } else {
+          validOptions[prop] = options[prop];
+        }
       });
       return editor.setValue(validOptions);
     }

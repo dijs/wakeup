@@ -17,4 +17,6 @@ function updated() {
   currentJob = schedule.scheduleJob(config.cronPattern, wakeUp);
 }
 
-server(config.port, started, updated);
+// TODO: Make this changeable
+var initialPort = getConfig().port;
+server(initialPort, started, updated);

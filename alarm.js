@@ -7,6 +7,7 @@ var ip = require('./ip');
 var lights = require('./lights');
 var getSchedules = require('./schedules');
 var duration = require('./duration');
+var summary = require('./summary');
 var getConfig = require('./config.js');
 
 var VERBOSE = true;
@@ -48,21 +49,6 @@ function playRadio(player, uri, metadata, callback) {
   });
 }
 
-function createSummary(weather, schedules) {
-  var scheduleText = schedules.filter(function (schedule) {
-      return schedule.events > 0;
-    })
-    .map(function (schedule) {
-      var eventsText = schedule.events.map(function (event) {
-        return event.summary + ' at ' + event.time;
-      }).join(' and ');
-      return schedule.name + ' has ' + eventsText;
-    }).join(' and ');
-  var weatherText = 'Good morning. Today\'s weather is ' + weather.summary +
-    ', the low is ' + weather.low + ', and the high is ' + weather.high + '.';
-  return weatherText + (scheduleText.length > 0 ? ' ' + scheduleText : '');
-}
-
 // TODO: Make these promises for god sake
 module.exports = function wakeUp(callback) {
   var config = getConfig();
@@ -100,7 +86,7 @@ module.exports = function wakeUp(callback) {
         });
       },
       function (weather, schedules, cb) {
-        var summaryText = createSummary(weather, schedules);
+        var summaryText = summary(weather, schedules);
         log('Fetching TTS');
         tts(
           summaryText,
@@ -145,7 +131,7 @@ module.exports = function wakeUp(callback) {
         player.setVolume(config.radioVolume, cb)
       },
       function (err, cb) {
-        log('Start playing radio');
+        log('Starting radio');
         playRadio(player, config.radioUri, config.radioMetadata, cb)
       }
     ], callback);
