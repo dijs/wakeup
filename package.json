@@ -4,8 +4,10 @@
   "description": "Wake Up Alarm",
   "main": "index.js",
   "scripts": {
-    "watch": "nodemon .",
-    "start": "node index"
+    "compile": "babel src --out-dir dist --source-maps",
+    "watch": "nodemon --ignore dist --exec \"npm run compile\"",
+    "test": "mocha --compilers js:mocha-babel tests/*.js",
+    "start": "npm run compile && node dist/index"
   },
   "author": "Richard van der Dys",
   "license": "MIT",
@@ -15,6 +17,7 @@
     "body-parser": "^1.14.1",
     "express": "^4.13.3",
     "forecastio": "^0.2.0",
+    "fs-promise": "^0.3.1",
     "google-auth-library": "^0.9.6",
     "googleapis": "^2.1.5",
     "ivona-node": "^0.2.0",
@@ -27,6 +30,12 @@
     "sonos": "^0.8.0"
   },
   "devDependencies": {
-    "nodemon": "^1.8.1"
+    "babel": "^5.8.34",
+    "babel-eslint": "*",
+    "babel-runtime": "^6.3.19",
+    "mocha": "^2.3.4",
+    "mocha-babel": "^3.0.0",
+    "nodemon": "^1.8.1",
+    "should": "^8.0.2"
   }
 }

@@ -63,6 +63,12 @@ function setupEditor(editor) {
   return getCurrentOptions.then(setOptions);
 }
 
-getSchema.then(createEditor).then(setupEditor).then(function () {
-  console.log('done');
-});
+function showInfo() {
+  $.get('/info', function (info) {
+    $('#info-name').html(info.name);
+    $('#info-room').html(info.room);
+    $('#info-state').html(info.state);
+  });
+}
+
+getSchema.then(createEditor).then(setupEditor).then(showInfo);
