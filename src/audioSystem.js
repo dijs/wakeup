@@ -86,11 +86,11 @@ export default function () {
       }
 
       function info() {
-        return new Promise(infoResolve => {
+        return new Promise(resolveInfo => {
           return Promise
             .all([description(), state()])
             .then(([_description, _state]) => {
-              infoResolve({
+              resolveInfo({
                 name: _description.friendlyName,
                 room: _description.roomName,
                 state: _state,

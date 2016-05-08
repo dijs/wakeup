@@ -1,20 +1,21 @@
-
 import express from 'express'
 import fs from 'node-fs-extra'
 import bodyParser from 'body-parser'
 import wakeUp from './alarm'
+import getConfig from './config'
 import findAudioSystem from './audioSystem'
 
-let jsonParser = bodyParser.json()
-let urlencodedParser = bodyParser.urlencoded({
-  extended: false
+const jsonParser = bodyParser.json()
+const urlencodedParser = bodyParser.urlencoded({
+  extended: false,
 })
 
-const OPTIONS_PATH = __dirname + '/../options.json'
+const CONFIG_PATH = __dirname + '/../config.json'
+
+const log = require('debug')('WakeUp:Server')
 
 export default function (port, started, updated) {
-
-  let app = express()
+  const app = express()
 
   app.use(jsonParser)
   app.use(urlencodedParser)
@@ -24,34 +25,33 @@ export default function (port, started, updated) {
   app.get('/info', (req, res) => {
     findAudioSystem().then(system => {
       system.info().then(info => {
+        log('Got audio system info', info)
         res.json(info)
       })
     })
   })
 
-  app.get('/options', function (req, res, next) {
-    fs.readJson(OPTIONS_PATH, function (err, json) {
-      if (err) {
-        return next(err)
-      }
-      return res.json(json)
-    })
+  app.get('/options', (req, res, next) => {
+    getConfig()
+      .then(config => res.json(config))
+      .catch(err => next(err))
   })
-  app.post('/options', function (req, res) {
-    var options = JSON.parse(req.body.json)
-    var oldOptions = fs.readJsonSync(OPTIONS_PATH)
-    var cronPatternChanged = options.cronPattern !== oldOptions.cronPattern
-    fs.writeJsonSync(OPTIONS_PATH, options)
+
+  app.post('/options', (req, res) => {
+    const options = JSON.parse(req.body.json)
+    const oldOptions = fs.readJsonSync(CONFIG_PATH)
+    const cronPatternChanged = options.cronPattern !== oldOptions.cronPattern
+    fs.writeJsonSync(CONFIG_PATH, options)
     if (cronPatternChanged) {
       updated()
     }
     return res.sendStatus(200)
   })
-  app.post('/test', function (req, res) {
+
+  app.post('/test', (req, res) => {
     wakeUp()
     return res.sendStatus(200)
   })
 
   app.listen(port, started)
-
 }
