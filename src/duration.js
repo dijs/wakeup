@@ -1,4 +1,4 @@
-import 'babel/polyfill'
+import 'babel-polyfill'
 
 import {createReadStream} from 'fs'
 import mm from 'musicmetadata'

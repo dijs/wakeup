@@ -1,6 +1,8 @@
-import 'babel/polyfill'
+import 'babel-polyfill'
 import hue from 'node-hue-api'
 import getConfig from './config.js'
+
+const log = require('debug')('WakeUp:Lights')
 
 const HueApi = hue.HueApi
 const lightState = hue.lightState
@@ -21,15 +23,21 @@ function dimAllLights(api, lightLevel) {
   })
 }
 
-async function getApi (hueUser) {
-  const bridges = await hue.nupnpSearch()
-  return new HueApi(bridges[0].ipaddress, hueUser)
+function getApi(hueUser) {
+  return hue.nupnpSearch()
+    .then(bridges => new HueApi(bridges[0].ipaddress, hueUser));
 }
 
-export default async function () {
-  const config = await getConfig()
-  const api = await getApi(config.hueUser)
-  return dimAllLights(api, config.lightLevel)
+// TODO: Maybe add get config var to ease the promise chain here...
+export default function () {
+  return getConfig().then(config => {
+    if (!config.hueUser) {
+      log('Warning: No Phillips Hue username (hueUser) specified in config, skipping')
+      return Promise.resolve()
+    }
+    return getApi(config.hueUser)
+      .then(api => dimAllLights(api, config.lightLevel))
+  })
 }
 
 // Functions for setting up the lights

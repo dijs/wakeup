@@ -63,6 +63,8 @@ export default function (callback) {
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
     if (err) {
       console.log('Error loading client secret file: ' + err)
+      console.log('Create your own client_secret.json file: https://github.com/jay0lee/GAM/wiki/Creating-client_secrets.json-and-oauth2service.json');
+      console.log('Rename and move client secret file to wakeup directory');
       return
     }
     authorize(JSON.parse(content), function (auth) {

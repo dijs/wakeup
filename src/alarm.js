@@ -1,4 +1,4 @@
-import 'babel/polyfill'
+import 'babel-polyfill'
 import tts from './tts'
 import getForecast from './forecast'
 import ip from './ip'
@@ -9,22 +9,32 @@ import summary from './summary'
 import findAudioSystem from './audioSystem'
 import getConfig from './config'
 
-const VERBOSE = true
-const SUMMARY_FILE = 'todays_summary.mp3'
+const log = require('debug')('WakeUp:Alarm')
 
-let log = obj => {
-  if (VERBOSE) console.log(obj)
-}
+const SUMMARY_FILE = 'todays_summary.mp3'
 
 const now = () => +new Date()
 
 // TODO: Use module for this
 const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
 
-export default async function () {
+// TODO: Move into another file
+// returns duration and file
+function fetchSummary() {
+  log('Fetching forecast and schedules')
+  return Promise.all([
+    getForecast(),
+    getSchedules(),
+  ]).then(([weather, schedules]) => {
+    const summaryText = summary(weather, schedules)
+    log('Converting summary to speech')
+    return tts(summaryText, SUMMARY_FILE)
+    .then(() => log('Fetching duration of summary'))
+    .then(() => duration(`${__dirname}/../audio/${SUMMARY_FILE}`))
+  })
+}
 
-  const [config, player] = await Promise.all([getConfig(), findAudioSystem()])
-
+function alarm(config, player, summaryDuration) {
   if (config.off === true) {
     return 'off'
   }
@@ -32,54 +42,65 @@ export default async function () {
   const AUDIO_PATH = `http://${ip()}:${config.port}/audio/`
 
   const {
-    setVolume, queueNext, play
+    setVolume, queueNext, play,
   } = player
 
-  log('Setting song volume')
+  function playSong() {
+    if (config.song) {
+      log('Setting song volume')
+      return setVolume(config.songVolume)
+        .then(() => log(`Queuing song: ${config.song}`))
+        .then(() => queueNext(AUDIO_PATH + config.song))
+        .then(() => log(`Playing song: ${config.song}`))
+        .then(() => play())
+    }
+    log('Warning: No custom song set in config and added to audio directory')
+    return Promise.resolve()
+  }
 
-  await setVolume(config.songVolume)
-  await queueNext(AUDIO_PATH + config.song)
-  await play()
+  function playRadio() {
+    if (config.radioUri) {
+      return Promise.resolve()
+        .then(() => log('Setting radio volume'))
+        .then(() => setVolume(config.radioVolume))
+        .then(() => log('Starting radio'))
+        .then(() => queueNext(config.radioUri, config.radioMetadata))
+        .then(() => play())
+    }
+    return Promise.resolve()
+  }
 
+  // TODO: Make promise chain nicer...
   // TODO: Move this out into a timer handler...
   const startedAlarm = now()
-  log('Started alarm at: ' + startedAlarm)
+  log(`Started alarm at: ${startedAlarm}`)
+  log('Setting song volume')
+  return playSong()
+    .then(() => log('Dimming lights on'))
+    .then(() => dimAllLights())
+    .then(() => {
+      // TODO: This should be handled better, more external
+      const playedAlarm = now() - startedAlarm
+      const alarmTimeLeft = Math.max(0, config.minAlarmTime - playedAlarm)
+      log(`Alarm time left: ${alarmTimeLeft}`)
+      return timeout(alarmTimeLeft)
+    })
+    .then(() => log('Setting summary volume'))
+    .then(() => setVolume(config.summaryVolume))
+    .then(() => log('Playing today\'s summary'))
+    .then(() => queueNext(AUDIO_PATH + SUMMARY_FILE))
+    .then(() => play())
+    .then(() => log(`Should be saying summary (${summaryDuration} sec)`))
+    // TODO: Add duration padding for radio to start?
+    .then(() => timeout(Math.round(summaryDuration + 3) * 1000))
+    .then(() => playRadio())
+    .then(() => log('done'))
+}
 
-  log('Fetching forecast and schedules')
-  const [weather, schedules] = await Promise.all([getForecast(), getSchedules()])
-  const summaryText = summary(weather, schedules)
-
-  log('Fetching TTS')
-  await tts(summaryText, SUMMARY_FILE)
-
-  log('Dimming lights on')
-
-  await dimAllLights()
-
-  const playedAlarm = now() - startedAlarm
-  const alarmTimeLeft = Math.max(0, config.minAlarmTime - playedAlarm)
-  log('Alarm time left: ' + alarmTimeLeft)
-  await timeout(alarmTimeLeft)
-
-  log('Setting summary volume')
-  await setVolume(config.summaryVolume)
-
-  log('Playing today\'s summary')
-  await queueNext(AUDIO_PATH + SUMMARY_FILE)
-  await play()
-
-  log('Measuring summary duration')
-  const seconds = await duration(__dirname + '/../audio/' + SUMMARY_FILE)
-
-  log('Should be saying summary (' + seconds + ' sec)')
-    // Add duration padding for radio to start
-  await timeout(Math.round(seconds + 3) * 1000)
-
-  log('Setting radio volume')
-  await setVolume(config.radioVolume)
-
-  log('Starting radio')
-  await queueNext(config.radioUri, config.radioMetadata)
-  await play()
-
+export default function () {
+  return Promise.all([getConfig(), findAudioSystem(), fetchSummary()])
+    .then(([config, player, summaryDuration]) => {
+      return alarm(config, player, summaryDuration)
+    })
+    .catch(err => log(err))
 }

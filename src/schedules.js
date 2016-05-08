@@ -1,16 +1,21 @@
-import 'babel/polyfill'
+// TODO: Rewrite this module...
 
-var moment = require('moment')
-var async = require('async')
-var getCalendarApi = require('./calendar')
-var getConfig = require('./config.js')
+import 'babel-polyfill'
+
+import moment from 'moment'
+import async from 'async'
+import getCalendarApi from './calendar'
+
+import getConfig from './config'
+
+const log = require('debug')('WakeUp:Schedules')
 
 function normalize(event) {
-  var date = event.start.dateTime || event.start.date
+  const date = event.start.dateTime || event.start.date
   return {
-    date: date,
+    date,
     time: moment(date).format('hA'),
-    summary: event.summary
+    summary: event.summary,
   }
 }
 
@@ -19,32 +24,40 @@ function byToday(event) {
 }
 
 function getTodaysEvents(calendar, auth, calendarId, callback) {
-  var now = moment().toDate()
+  const now = moment().toDate()
   calendar.events.list({
-    auth: auth,
-    calendarId: calendarId,
+    auth,
+    calendarId,
     timeMin: now.toISOString(),
     maxResults: 10,
     singleEvents: true,
-    orderBy: 'startTime'
-  }, function (err, response) {
+    orderBy: 'startTime',
+  }, (err, response) => {
     if (err) {
-      console.log('The API returned an error: ' + err)
+      log('The API returned an error:')
+      log(err)
       return callback(err, [])
     }
-    var events = response.items
-    callback(null, events.map(normalize).filter(byToday))
+    const events = response.items
+    return callback(null, events.map(normalize).filter(byToday))
   })
 }
 
 function getSchedules(callback) {
   getConfig().then(config => {
-    getCalendarApi((auth, calendar) => {
+    if (!config.calendars) {
+      log('Warning: No calenders specified in config.json, using empty schedule')
+      return callback(null, [])
+    }
+    // TODO: Need more logging here...
+    log('Fetching Calendar API')
+    return getCalendarApi((auth, calendar) => {
+      log(`Fetching calendars for ${config.calendars.map(({ name }) => name).join(' and ')}`)
       async.map(config.calendars, (info, done) => {
         getTodaysEvents(calendar, auth, info.id, (err, events) => {
           done(err, {
             name: info.name,
-            events: events
+            events,
           })
         })
       }, callback)
@@ -58,6 +71,7 @@ export default function () {
       if (err) {
         return reject(err)
       }
+      log('Fetched schedules', schedules)
       return resolve(schedules)
     })
   })
