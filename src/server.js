@@ -10,17 +10,17 @@ const urlencodedParser = bodyParser.urlencoded({
   extended: false,
 })
 
-const CONFIG_PATH = __dirname + '/../config.json'
+const CONFIG_PATH = `${__dirname}/../config.json`
 
 const log = require('debug')('WakeUp:Server')
 
-export default function (port, started, updated) {
+export default function (started, updated) {
   const app = express()
 
   app.use(jsonParser)
   app.use(urlencodedParser)
-  app.use('/audio', express.static(__dirname + '/../audio'))
-  app.use('/', express.static(__dirname + '/../options'))
+  app.use('/audio', express.static(`${__dirname}/../audio`))
+  app.use('/', express.static(`${__dirname}/../options`))
 
   app.get('/info', (req, res) => {
     findAudioSystem().then(system => {
@@ -43,7 +43,7 @@ export default function (port, started, updated) {
     const cronPatternChanged = options.cronPattern !== oldOptions.cronPattern
     fs.writeJsonSync(CONFIG_PATH, options)
     if (cronPatternChanged) {
-      updated()
+      updated(options)
     }
     return res.sendStatus(200)
   })
@@ -53,5 +53,9 @@ export default function (port, started, updated) {
     return res.sendStatus(200)
   })
 
-  app.listen(port, started)
+  return getConfig().then(config => {
+    const { port } = config;
+    log(`Starting WakeUp server @ http://localhost:${port}`)
+    app.listen(port, () => started(config))
+  })
 }

@@ -17,6 +17,7 @@
     "babel-polyfill": "^6.8.0",
     "bluebird": "^2.10.2",
     "body-parser": "^1.14.1",
+    "cron": "^1.1.0",
     "debug": "^2.2.0",
     "express": "^4.13.3",
     "forecastio": "^0.2.0",
@@ -30,7 +31,6 @@
     "musicmetadata": "^2.0.2",
     "node-fs-extra": "^0.8.1",
     "node-hue-api": "^1.1.2",
-    "node-schedule": "^0.2.9",
     "sonos": "^0.8.0",
     "source-map-support": "^0.4.0"
   },
@@ -42,6 +42,7 @@
     "eslint-plugin-import": "^1.7.0",
     "eslint-plugin-jsx-a11y": "^1.2.0",
     "eslint-plugin-react": "^5.0.1",
+    "lolex": "^1.4.0",
     "mocha": "^2.3.4",
     "mocha-babel": "^3.0.3",
     "nodemon": "^1.8.1",
