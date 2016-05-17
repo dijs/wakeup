@@ -39,11 +39,12 @@ export default function (started, updated) {
 
   app.post('/options', (req, res) => {
     const options = JSON.parse(req.body.json)
-    const oldOptions = fs.readJsonSync(CONFIG_PATH)
-    const cronPatternChanged = options.cronPattern !== oldOptions.cronPattern
-    fs.writeJsonSync(CONFIG_PATH, options)
+    const config = fs.readJsonSync(CONFIG_PATH)
+    const cronPatternChanged = options.cronPattern !== config.cronPattern
+    const newConfig = Object.assign({}, config, options);
+    fs.writeJsonSync(CONFIG_PATH, newConfig);
     if (cronPatternChanged) {
-      updated(options)
+      updated(newConfig)
     }
     return res.sendStatus(200)
   })
