@@ -1,7 +1,7 @@
 import 'babel-polyfill'
 import sonos from 'sonos'
 
-const log = require('debug')('AudioSystem')
+const log = require('debug')('WakeUp:AudioSystem')
 
 function findPlayer() {
   return new Promise(resolve => {

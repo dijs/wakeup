@@ -2,7 +2,7 @@ import wakeUp from './alarm'
 import server from './server'
 import getConfig from './config.js'
 
-const log = require('debug')('test')
+const log = require('debug')('WakeUp:Test')
 
 console.log('hello');
 

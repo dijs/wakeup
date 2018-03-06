@@ -20,7 +20,7 @@ const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
 
 // TODO: Move into another file
 // returns duration and file
-function fetchSummary() {
+function fetchSummaryDuration() {
   log('Fetching forecast and schedules')
   return Promise.all([
     getForecast(),
@@ -98,7 +98,8 @@ function alarm(config, player, summaryDuration) {
 }
 
 export default function () {
-  return Promise.all([getConfig(), findAudioSystem(), fetchSummary()])
+  log('Gathering data for alarm');
+  return Promise.all([getConfig(), findAudioSystem(), fetchSummaryDuration()])
     .then(([config, player, summaryDuration]) => {
       return alarm(config, player, summaryDuration)
     })
