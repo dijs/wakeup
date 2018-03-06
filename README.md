@@ -36,7 +36,7 @@ You can add a sonos radio station to your config as well to start it playing aft
 You will need to find and add the radioUri and radioMetadata for the sonos station to the config. This is not easy, I found it using wireshark and watching sonos packets... If someone knows a better way, PLEASE tell me.
 
 ```shell
-npm rum authorize-calendar
+npm run authorize-calendar
 npm start
 ```
 
@@ -44,6 +44,6 @@ And if something doesn't work correctly, please use the logger to get more infor
 Set the debugging ENV variable and restart, like so:
 
 ```shell
-export DEBUG="*"
+export DEBUG=Wakeup*
 npm start
 ```
