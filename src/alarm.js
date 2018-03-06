@@ -1,4 +1,5 @@
 import 'babel-polyfill'
+import fs from 'fs'
 import tts from './tts'
 import getForecast from './forecast'
 import ip from './ip'
@@ -22,16 +23,27 @@ const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
 // returns duration and file
 function fetchSummaryDuration() {
   log('Fetching forecast and schedules')
-  return Promise.all([
-    getForecast(),
-    getSchedules(),
-  ]).then(([weather, schedules]) => {
-    const summaryText = summary(weather, schedules)
-    log('Converting summary to speech')
-    return tts(summaryText, SUMMARY_FILE)
+  let weather = undefined
+  let schedules = undefined
+  return getForecast()
+    .then(x => {
+      weather = x
+      return getSchedules()
+    })
+    .then(x => {
+      schedules = x
+    })
+    .catch(err => {
+      log(err)
+      log('Continuing summary duration calculating')
+    })
+    .then(() => {
+      const summaryText = summary(weather, schedules)
+      log('Converting summary to speech')
+      return tts(summaryText, SUMMARY_FILE)
+    })
     .then(() => log('Fetching duration of summary'))
     .then(() => duration(`${__dirname}/../audio/${SUMMARY_FILE}`))
-  })
 }
 
 function alarm(config, player, summaryDuration) {
@@ -46,10 +58,10 @@ function alarm(config, player, summaryDuration) {
   } = player
 
   function playSong() {
-    if (config.song) {
+    if (config.song && fs.existsSync(`${__dirname}/../audio/${config.song}`)) {
       log('Setting song volume')
-      return setVolume(config.songVolume)
-        .then(() => log(`Queuing song: ${config.song}`))
+      return setVolume(config.songVolume || config.volume || 50)
+        .then(() => log(`Queuing song: ${config.song} @ ${AUDIO_PATH + config.song}`))
         .then(() => queueNext(AUDIO_PATH + config.song))
         .then(() => log(`Playing song: ${config.song}`))
         .then(() => play())
@@ -62,7 +74,7 @@ function alarm(config, player, summaryDuration) {
     if (config.radioUri) {
       return Promise.resolve()
         .then(() => log('Setting radio volume'))
-        .then(() => setVolume(config.radioVolume))
+        .then(() => setVolume(config.radioVolume || config.volume || 50))
         .then(() => log('Starting radio'))
         .then(() => queueNext(config.radioUri, config.radioMetadata))
         .then(() => play())
@@ -86,7 +98,7 @@ function alarm(config, player, summaryDuration) {
       return timeout(alarmTimeLeft)
     })
     .then(() => log('Setting summary volume'))
-    .then(() => setVolume(config.summaryVolume))
+    .then(() => setVolume(config.summaryVolume || config.volume || 50))
     .then(() => log('Playing today\'s summary'))
     .then(() => queueNext(AUDIO_PATH + SUMMARY_FILE))
     .then(() => play())
@@ -95,13 +107,29 @@ function alarm(config, player, summaryDuration) {
     .then(() => timeout(Math.round(summaryDuration + 3) * 1000))
     .then(() => playRadio())
     .then(() => log('done'))
+    .catch(err => {
+      log('Error in alarm services', err);
+    })
 }
 
 export default function () {
   log('Gathering data for alarm');
-  return Promise.all([getConfig(), findAudioSystem(), fetchSummaryDuration()])
-    .then(([config, player, summaryDuration]) => {
-      return alarm(config, player, summaryDuration)
+  let config = null
+  let player = null
+  let summaryDuration = null
+  return getConfig()
+    .then(x => {
+      config = x
+      return findAudioSystem();
+      // return findAudioSystem('192.168.3.103');
     })
-    .catch(err => log(err))
+    .then(x => {
+      player = x
+      return fetchSummaryDuration();
+    })
+    .then(x => {
+      summaryDuration = x
+    })
+    .then(() => alarm(config, player, summaryDuration))
+    .catch(err => log('Could not finish gathering data for alarm', err))
 }

@@ -65,7 +65,7 @@ export default function (callback) {
       console.log('Error loading client secret file: ' + err)
       console.log('Create your own client_secret.json file: https://github.com/jay0lee/GAM/wiki/Creating-client_secrets.json-and-oauth2service.json');
       console.log('Rename and move client secret file to wakeup directory');
-      return
+      return callback(new Error('Could not load client file for calendar fetching'))
     }
     authorize(JSON.parse(content), function (auth) {
       return callback(auth, google.calendar('v3'))

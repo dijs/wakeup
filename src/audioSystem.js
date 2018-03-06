@@ -1,102 +1,64 @@
 import 'babel-polyfill'
-import sonos from 'sonos'
+import { DeviceDiscovery as discoverDevices, Sonos } from 'sonos';
 
 const log = require('debug')('WakeUp:AudioSystem')
 
-function findPlayer() {
-  return new Promise(resolve => {
-    let called = false
+function findPlayer(deviceIp) {
+  if (deviceIp) {
+    log(`Using ${deviceIp} for sonos IP`)
+    return Promise.resolve(new Sonos(deviceIp))
+  }
+  return new Promise((resolve, reject) => {
     log('Searching for sonos systems')
-    const search = sonos.search(player => {
-      if (!called) {
-        called = true
-        log(`Found sonos system @ ${player.host}`)
-        resolve(player)
-      }
-      search.socket.close()
+    let found = false
+    const search = discoverDevices(player => {
+      log('Found possible device', player.host)
+      player.deviceDescription()
+        .then(({ friendlyName }) => !friendlyName.includes('BOOST'))
+        .then(isSpeaker => {
+          if (!found && isSpeaker) {
+            found = true
+            search.destroy()
+            log(`Found sonos device @ ${player.host}`)
+            resolve(player)
+          }
+        })
     })
+    setTimeout(() => {
+      if (!found) reject('Could not find sonos device')
+    }, 10000)
   })
 }
 
 // TODO: Only sonos right now, but maybe more later...
-export default function () {
-  return new Promise(resolve => {
-    findPlayer().then(player => {
+export default function (deviceIp) {
+  return new Promise((resolve, reject) => {
+    findPlayer(deviceIp).then(player => {
       function queueNext(uri, metadata) {
-        return new Promise((queueResolve, reject) => {
-          player.queueNext({
-            uri,
-            metadata,
-          }, err => {
-            if (err) {
-              reject(err)
-            } else {
-              queueResolve()
-            }
-          })
-        })
+        return player.flush().then(() => player.queue({
+          uri,
+          metadata,
+        }));
       }
 
       function play() {
-        return new Promise((playResolve, reject) => {
-          player.play(err => {
-            if (err) {
-              reject(err)
-            } else {
-              playResolve()
-            }
-          })
-        })
+        return player.play()
       }
 
       function setVolume(volume) {
-        return new Promise((volumeResolve, reject) => {
-          player.setVolume(volume, err => {
-            if (err) {
-              reject(err)
-            } else {
-              volumeResolve()
-            }
-          })
-        })
-      }
-
-      function description() {
-        return new Promise((descriptionResolve, reject) => {
-          player.deviceDescription((err, data) => {
-            if (err) {
-              reject(err)
-            } else {
-              descriptionResolve(data)
-            }
-          })
-        })
-      }
-
-      function state() {
-        return new Promise((stateResolve, reject) => {
-          player.getCurrentState((err, data) => {
-            if (err) {
-              reject(err)
-            } else {
-              stateResolve(data)
-            }
-          })
-        })
+        return player.setVolume(volume)
       }
 
       function info() {
-        return new Promise(resolveInfo => {
-          return Promise
-            .all([description(), state()])
-            .then(([_description, _state]) => {
-              resolveInfo({
-                name: _description.friendlyName,
-                room: _description.roomName,
-                state: _state,
-              })
-            })
-        })
+        return Promise
+          .all([player.deviceDescription(), player.getCurrentState()])
+          .then(([description, state]) => {
+            return {
+              name: description.friendlyName,
+              room: description.roomName,
+              state,
+            }
+          })
       }
 
       resolve({
@@ -105,6 +67,6 @@ export default function () {
         setVolume,
         info,
       })
-    })
+    }).catch(err => reject(err))
   })
 }

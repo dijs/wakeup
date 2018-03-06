@@ -37,6 +37,10 @@ export default function () {
     }
     return getApi(config.hueUser)
       .then(api => dimAllLights(api, config.lightLevel))
+      .catch(err => {
+        log('Could not get hue API user', err);
+        return Promise.resolve()
+      })
   })
 }
 

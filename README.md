@@ -24,9 +24,6 @@ After getting these values, enter them into the config.json
 
 In order to get daily schedules, add your names and id's(emails) to the calendars config property.
 
-You will need authorization for the Ivona service to use TTS, go here get access https://www.ivona.com/us/about-us/text-to-speech/
-Once delivered, please add to config.json
-
 You can add a mp3 song file to the audio directory in order to start your morning with a favorite song.
 Remember to also add the "song" filename property to the config
 

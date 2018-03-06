@@ -1,4 +1,4 @@
-export default function (weather, schedules) {
+export default function (weather, schedules = []) {
   const scheduleText = schedules.filter(schedule => {
     return schedule.events.length > 0
   })

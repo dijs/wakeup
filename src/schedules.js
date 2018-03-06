@@ -4,6 +4,7 @@ import 'babel-polyfill'
 
 import moment from 'moment'
 import async from 'async'
+import isError from 'lodash/isError'
 import getCalendarApi from './calendar'
 
 import getConfig from './config'
@@ -52,6 +53,9 @@ function getSchedules(callback) {
     // TODO: Need more logging here...
     log('Fetching Calendar API')
     return getCalendarApi((auth, calendar) => {
+      if (isError(auth)) {
+        return callback(auth)
+      }
       log(`Fetching calendars for ${config.calendars.map(({ name }) => name).join(' and ')}`)
       async.map(config.calendars, (info, done) => {
         getTodaysEvents(calendar, auth, info.id, (err, events) => {

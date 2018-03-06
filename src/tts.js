@@ -1,32 +1,44 @@
 import 'babel-polyfill'
-import Ivona from 'ivona-node'
+
 import fs from 'fs'
-import getConfig from './config.js'
 import mkdirp from 'mkdirp'
+import request from 'request'
+import googleTTS from 'google-tts-api'
+
+import getConfig from './config.js'
 
 const log = require('debug')('WakeUp:TTS')
 
-// TODO: Maybe convert stream to promise here.
-function createSpeech(text, filename, ivonaAuth, ivonaSpeech) {
+function createSpeech(text, filename, lang = 'en', speed = 1) {
+  log('Converting text to speech')
+  mkdirp.sync('./audio')
+  const path = `./audio/${filename}`;
   return new Promise((resolve, reject) => {
-    log('Converting text to speech')
-    const ivona = new Ivona(ivonaAuth)
-    const stream = ivona.createVoice(text, ivonaSpeech)
-    mkdirp.sync('./audio')
-    stream.pipe(fs.createWriteStream(`./audio/${filename}`))
-    stream.on('end', () => resolve())
-    stream.on('close', () => {})
-    stream.on('error', err => {
-      log('Error while converting:')
-      log(err)
-      reject(err)
-    })
+    googleTTS(text, lang, speed)
+      .then(url => {
+        const req = request(url);
+        log('Generated URL', url)
+        req.on('response', res => {
+          res.pipe(fs.createWriteStream(path));
+        })
+        req.on('end', () => {
+          resolve();
+        })
+        req.on('error', (err) => {
+          log('Error while saving converted text to speech', err)
+          reject(err);
+        })
+      })
+      .catch(err => {
+        log('Error while converting text to speech', err)
+        reject(err)
+      })
   })
 }
 
 export default function (text, filename) {
   return getConfig()
-    .then(({ ivonaAuth, ivonaSpeech }) => {
-      return createSpeech(text, filename, ivonaAuth, ivonaSpeech)
+    .then(() => {
+      return createSpeech(text, filename)
     })
 }
