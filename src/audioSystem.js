@@ -30,6 +30,14 @@ function findPlayer(deviceIp) {
   })
 }
 
+function ignoreUPnPError(err) {
+  log('Sonos Error', err.message);
+  if (err.message.indexOf('<errorCode>701</errorCode>')) {
+    return Promise.resolve();
+  }
+  return Promise.reject(err);
+}
+
 // TODO: Only sonos right now, but maybe more later...
 export default function (deviceIp) {
   return new Promise((resolve, reject) => {
@@ -42,7 +50,7 @@ export default function (deviceIp) {
       }
 
       function play() {
-        return player.play()
+        return player.play().catch(err => ignoreUPnPError(err));
       }
 
       function setVolume(volume) {
