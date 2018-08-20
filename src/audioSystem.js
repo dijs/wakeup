@@ -3,6 +3,8 @@ import { DeviceDiscovery as discoverDevices, Sonos } from 'sonos';
 
 const log = require('debug')('WakeUp:AudioSystem')
 
+const isSpeaker = device => !!device.modelName.match(/play/i)
+
 function findPlayer(deviceIp) {
   if (deviceIp) {
     log(`Using ${deviceIp} for sonos IP`)
@@ -12,14 +14,13 @@ function findPlayer(deviceIp) {
     log('Searching for sonos systems')
     let found = false
     const search = discoverDevices(player => {
-      log('Found possible device', player.host)
+      log('Found possible speaker', player.host)
       player.deviceDescription()
-        .then(({ friendlyName }) => !friendlyName.includes('BOOST'))
-        .then(isSpeaker => {
-          if (!found && isSpeaker) {
+        .then(device => {
+          if (!found && isSpeaker(device)) {
             found = true
             search.destroy()
-            log(`Found sonos device @ ${player.host}`)
+            log(`Found speaker (${device.modelName}) @ ${player.host}`)
             resolve(player)
           }
         })

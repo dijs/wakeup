@@ -25,10 +25,7 @@ export default function (started, updated) {
   app.get('/info', (req, res) => {
     findAudioSystem()
       .then(device => device.info())
-      .then(info => {
-        log('Got audio system info', info)
-        res.json(info)
-      })
+      .then(info => res.json(info))
       .catch(err => {
         log('Could not get info', err.message)
         res.json({ err: 'Could not get info' })

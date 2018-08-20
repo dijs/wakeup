@@ -108,7 +108,9 @@ function alarm(config, player, summaryDuration) {
     .then(() => playRadio())
     .then(() => log('done'))
     .catch(err => {
-      log('Error in alarm services', err);
+      const errorFile = `alarm-service.error-${Date.now()}.txt`;
+      fs.writeFileSync(errorFile, err.toString());
+      log(`Error in alarm services (full error in "${errorFile}")`, err.message);
     })
 }
 
@@ -121,7 +123,6 @@ export default function () {
     .then(x => {
       config = x
       return findAudioSystem();
-      // return findAudioSystem('192.168.3.103');
     })
     .then(x => {
       player = x
