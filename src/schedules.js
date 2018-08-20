@@ -2,6 +2,7 @@
 
 import 'babel-polyfill'
 
+import fs from 'fs'
 import moment from 'moment'
 import async from 'async'
 import isError from 'lodash/isError'
@@ -35,8 +36,9 @@ function getTodaysEvents(calendar, auth, calendarId, callback) {
     orderBy: 'startTime',
   }, (err, response) => {
     if (err) {
-      log('The API returned an error:')
-      log(err)
+      const errorFile = `schedule-service.error-${Date.now()}.txt`;
+      fs.writeFileSync(errorFile, err.stack);
+      log(`Error in Calendar API (full error @ "${errorFile}"):`, err.message)
       return callback(err, [])
     }
     const events = response.items
@@ -55,6 +57,9 @@ function getSchedules(callback) {
     return getCalendarApi((auth, calendar) => {
       if (isError(auth)) {
         return callback(auth)
+      }
+      if (!calendar) {
+        return callback(new Error('Calendar was not found'));
       }
       log(`Fetching calendars for ${config.calendars.map(({ name }) => name).join(' and ')}`)
       async.map(config.calendars, (info, done) => {

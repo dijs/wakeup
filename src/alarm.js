@@ -109,7 +109,7 @@ function alarm(config, player, summaryDuration) {
     .then(() => log('done'))
     .catch(err => {
       const errorFile = `alarm-service.error-${Date.now()}.txt`;
-      fs.writeFileSync(errorFile, err.toString());
+      fs.writeFileSync(errorFile, err.stack);
       log(`Error in alarm services (full error in "${errorFile}")`, err.message);
     })
 }

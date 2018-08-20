@@ -69,6 +69,20 @@ function showInfo() {
     $('#info-room').html(info.room);
     $('#info-state').html(info.state);
   });
+  $.get('/schedules', function (schedules) {
+    let html = '';
+    schedules.forEach(person => {
+      person.events.forEach(event => {
+        html += `<tr>
+          <th scope="row">${event.time}</th>
+          <td>&nbsp;&nbsp;${event.summary}</td>
+        </tr>`;
+      })
+    })
+    $('.table2 tbody').html(
+      html || 'No events'
+    );
+  });
 }
 
 getSchema.then(createEditor).then(setupEditor).then(showInfo);

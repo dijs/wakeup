@@ -6,3 +6,4 @@ client_secret.json
 options.json
 npm-debug.log
 dist
+*.error-*.txt

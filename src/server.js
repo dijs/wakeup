@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import wakeUp from './alarm'
 import getConfig from './config'
 import findAudioSystem from './audioSystem'
+import getSchedules from './schedules'
 
 const jsonParser = bodyParser.json()
 const urlencodedParser = bodyParser.urlencoded({
@@ -29,6 +30,15 @@ export default function (started, updated) {
       .catch(err => {
         log('Could not get info', err.message)
         res.json({ err: 'Could not get info' })
+      })
+  })
+
+  app.get('/schedules', (req, res) => {
+    getSchedules()
+      .then(schedules => res.json(schedules))
+      .catch(err => {
+        log('Could not get schedules', err.message)
+        res.json({ err: 'Could not get schedules' })
       })
   })
 

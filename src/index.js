@@ -12,4 +12,4 @@ const alarmScheduler = createScheduler(wakeUp)
 server(
   alarmScheduler.start,
   alarmScheduler.update
-).catch(err => log(err))
+).catch(err => log(err.message))
