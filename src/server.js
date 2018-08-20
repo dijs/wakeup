@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import wakeUp from './alarm'
 import getConfig from './config'
 import findAudioSystem from './audioSystem'
+import { findLights, registerUser } from './lights'
 import getSchedules from './schedules'
 
 const jsonParser = bodyParser.json()
@@ -32,6 +33,18 @@ export default function (started, updated) {
         res.json({ err: 'Could not get info' })
       })
   })
+
+  app.get('/lights', (req, res, next) => {
+    findLights()
+      .then(lights => res.json(lights))
+      .catch(err => next(err))
+  });
+
+  app.get('/register-lights', (req, res, next) => {
+    registerUser()
+      .then(userId => res.send(`Please update your config.json with the hueUser "${userId}"`))
+      .catch(err => next(err))
+  });
 
   app.get('/schedules', (req, res) => {
     getSchedules()

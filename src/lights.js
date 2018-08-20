@@ -14,6 +14,24 @@ function createSlowDimState(lightLevel) {
     .transition(5000)
 }
 
+export function findBridges() {
+  return hue.nupnpSearch();
+}
+
+function getApi(hueUser) {
+  return findBridges()
+    .then(bridges => new HueApi(bridges[0].ipaddress, hueUser));
+}
+
+export async function findLights() {
+  const config = await getConfig();
+  if (!config.hueUser) {
+    return Promise.reject(new Error('You must register a Phillips Hue user first. Please visit /register-user'))
+  }
+  const api = await getApi(config.hueUser);
+  return api.lights();
+}
+
 function dimAllLights(api, lightLevel) {
   const dimState = createSlowDimState(lightLevel)
   return api.lights().then(res => {
@@ -23,16 +41,15 @@ function dimAllLights(api, lightLevel) {
   })
 }
 
-function getApi(hueUser) {
-  return hue.nupnpSearch()
-    .then(bridges => new HueApi(bridges[0].ipaddress, hueUser));
+export async function registerUser() {
+  const bridges = await findBridges();
+  return new HueApi().registerUser(bridges[0].ipaddress, null, 'Jarvis')
 }
 
-// TODO: Maybe add get config var to ease the promise chain here...
 export default function () {
   return getConfig().then(config => {
     if (!config.hueUser) {
-      log('Warning: No Phillips Hue username (hueUser) specified in config, skipping')
+      log('Warning: No Phillips Hue username (hueUser) specified in config, Please visit /register-user')
       return Promise.resolve()
     }
     return getApi(config.hueUser)
@@ -43,18 +60,3 @@ export default function () {
       })
   })
 }
-
-// Functions for setting up the lights
-
-// function displayResult (result) {
-//   console.log(JSON.stringify(result, null, 3))
-// }
-//
-// function displayError (err) {
-//   console.log(err.stack)
-// }
-//
-// async function registerUser(api) {
-//   const bridges = await hue.nupnpSearch()
-//   return api.registerUser(bridges[0].ipaddress, null, 'Jarvis')
-// }
