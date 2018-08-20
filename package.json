@@ -1,6 +1,6 @@
 {
   "name": "wakeup",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Wake Up Alarm",
   "main": "index.js",
   "scripts": {
