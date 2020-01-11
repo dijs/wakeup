@@ -1,7 +1,6 @@
 import 'babel-polyfill'
 
 import fs from 'fs'
-import mkdirp from 'mkdirp'
 import request from 'request'
 import googleTTS from 'google-tts-api'
 
@@ -9,12 +8,12 @@ import getConfig from './config.js'
 
 const log = require('debug')('WakeUp:TTS')
 
-function createSpeech(text, filename, lang = 'en', speed = 1) {
+const maxFreeLength = 200
+
+function createSpeech(text, path, lang = 'en', speed = 1) {
   log('Converting text to speech')
-  mkdirp.sync('./audio')
-  const path = `./audio/${filename}`;
   return new Promise((resolve, reject) => {
-    googleTTS(text, lang, speed)
+    googleTTS(text.substring(0, maxFreeLength), lang, speed)
       .then(url => {
         const req = request(url);
         log('Generated URL', url)
@@ -36,9 +35,9 @@ function createSpeech(text, filename, lang = 'en', speed = 1) {
   })
 }
 
-export default function (text, filename) {
+export default function (text, path) {
   return getConfig()
     .then(() => {
-      return createSpeech(text, filename)
+      return createSpeech(text, path)
     })
 }

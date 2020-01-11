@@ -69,6 +69,7 @@ function getNewToken(oauth2Client, callback) {
 
 export default function (callback) {
   fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    log('Read client secrets')
     if (err) {
       log('Error loading client secret file: ' + err)
       log('Create your own client_secret.json file: https://github.com/jay0lee/GAM/wiki/CreatingClientSecretsFile');

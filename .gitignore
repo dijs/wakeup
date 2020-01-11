@@ -7,3 +7,4 @@ options.json
 npm-debug.log
 dist
 *.error-*.txt
+package-lock.json

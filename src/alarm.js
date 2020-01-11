@@ -1,11 +1,11 @@
 import 'babel-polyfill'
 import fs from 'fs'
-import tts from './tts'
+import generateSummaryAudio from './generateSummaryAudio'
 import getForecast from './forecast'
 import ip from './ip'
 import dimAllLights from './lights'
 import getSchedules from './schedules'
-import duration from './duration'
+// import duration from './duration'
 import summary from './summary'
 import findAudioSystem from './audioSystem'
 import getConfig from './config'
@@ -20,8 +20,7 @@ const now = () => +new Date()
 const timeout = millis => new Promise(resolve => setTimeout(resolve, millis))
 
 // TODO: Move into another file
-// returns duration and file
-function fetchSummaryDuration() {
+function makeSummary() {
   log('Fetching forecast and schedules')
   let weather = undefined
   let schedules = undefined
@@ -39,11 +38,12 @@ function fetchSummaryDuration() {
     })
     .then(() => {
       const summaryText = summary(weather, schedules)
+      log('Created summary', summaryText)
       log('Converting summary to speech')
-      return tts(summaryText, SUMMARY_FILE)
+      return generateSummaryAudio(summaryText, SUMMARY_FILE)
     })
-    .then(() => log('Fetching duration of summary'))
-    .then(() => duration(`${__dirname}/../audio/${SUMMARY_FILE}`))
+    // .then(() => log('Fetching duration of summary'))
+    // .then(() => duration(`${__dirname}/../audio/${SUMMARY_FILE}`))
 }
 
 function alarm(config, player, summaryDuration) {
@@ -82,7 +82,7 @@ function alarm(config, player, summaryDuration) {
     return Promise.resolve()
   }
 
-  // TODO: Make promise chain nicer...
+  // TODO: Make async
   // TODO: Move this out into a timer handler...
   const startedAlarm = now()
   log(`Started alarm at: ${startedAlarm}`)
@@ -103,8 +103,7 @@ function alarm(config, player, summaryDuration) {
     .then(() => queueNext(AUDIO_PATH + SUMMARY_FILE))
     .then(() => play())
     .then(() => log(`Should be saying summary (${summaryDuration} sec)`))
-    // TODO: Add duration padding for radio to start?
-    .then(() => timeout(Math.round(summaryDuration + 3) * 1000))
+    .then(() => timeout(summaryDuration * 1000))
     .then(() => playRadio())
     .then(() => log('done'))
     .catch(err => {
@@ -118,7 +117,7 @@ export default function () {
   log('Gathering data for alarm');
   let config = null
   let player = null
-  let summaryDuration = null
+  let summaryDuration = 30
   return getConfig()
     .then(x => {
       config = x
@@ -126,10 +125,7 @@ export default function () {
     })
     .then(x => {
       player = x
-      return fetchSummaryDuration();
-    })
-    .then(x => {
-      summaryDuration = x
+      return makeSummary();
     })
     .then(() => alarm(config, player, summaryDuration))
     .catch(err => log('Could not finish gathering data for alarm', err))

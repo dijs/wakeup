@@ -8,6 +8,7 @@
 git clone https://github.com/dijs/wakeup wakeup
 cd wakeup
 npm install
+export DEBUG=WakeUp*
 npm run compile
 ```
 
@@ -18,7 +19,7 @@ Follow the steps here to create your own client_secret.json file https://github.
 - Rename to client_secret.json
 - Move it to the wakeup directory
 
-Sign up for a https://forecast.io API key
+Sign up for a https://forecast.io API key (DarkSky)
 You must also get the latitude and longitude of your location
 After getting these values, enter them into the config.json
 
@@ -41,6 +42,5 @@ And if something doesn't work correctly, please use the logger to get more infor
 Set the debugging ENV variable and restart, like so:
 
 ```shell
-export DEBUG=Wakeup*
 npm start
 ```
